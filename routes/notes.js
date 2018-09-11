@@ -9,13 +9,13 @@ router.get('/', (req, res, next) => {
   const searchTerm = req.query.searchTerm;
 
   knex('notes')
-    .select('notes.id', 'title', 'content')
-    .modify(queryBuilder => {
+    .select('id', 'title', 'content')
+    .modify(results => {
       if (searchTerm) {
-        queryBuilder.where('title', 'like', `%${searchTerm}%`);
+        results.where('title', 'like', `%${searchTerm}%`);
       }
     })
-    .orderBy('notes.id')
+    .orderBy('id')
     .then(results => {
       res.json(results);
     })
@@ -31,7 +31,15 @@ router.get('/:id', (req, res, next) => {
   knex('notes')
     .select()
     .where({id: `${someID}`})
-    .then(results => res.json(results[0]))
+    .returning(['title', 'id'])
+    .then(results => {
+      if (results.length > 0) {
+        res.json(results[0]);
+        }
+      else {
+        next();
+      }
+    })
     .catch(err => {
       next(err)
     });
@@ -61,7 +69,10 @@ router.put('/:id', (req, res, next) => {
     .where({id: `${updateID}`})
     .update(updateObj)
     .returning(['title', 'content'])
-    .then(results => res.json(results[0]))
+    .then(results => {
+      console.log(results[0]);
+      res.json(results[0]);
+    })
     .catch(err => new(err));
 });
 
