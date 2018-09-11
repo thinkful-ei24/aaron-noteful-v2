@@ -75,13 +75,12 @@ router.put('/:id', (req, res, next) => {
   .where({id: `${updateID}`})
   .update(updateObj)
   .returning(['title', 'content'])
-  .then(results => res.json(results[0]));
-
+  .then(results => res.json(results[0]))
+  .catch(err => new(err));
 });
 
 
 router.post('/', (req, res, next) => {
-  
   const { title, content } = req.body;
   const newItem = { title, content };
 
