@@ -1,41 +1,27 @@
 'use strict';
 
 const express = require('express');
-
 const router = express.Router();
-
-// const data = require('../db/notes');
-// const simDB = require('../db/simDB');
-// const notes = simDB.initialize(data);
 const knex = require('../knex');
 
 
 router.get('/', (req, res, next) => {
   const searchTerm = req.query.searchTerm;
 
-  knex
-  .select('notes.id', 'title', 'content')
-  .from('notes')
-  .modify(queryBuilder => {
-    if (searchTerm) {
-      queryBuilder.where('title', 'like', `%${searchTerm}%`);
-    }
-  })
-  .orderBy('notes.id')
-  .then(results => {
-    res.json(results);
-  })
-  .catch(err => {
-    next(err);
-  });
-
-  // notes.filter(searchTerm)
-  //   .then(list => {
-  //     res.json(list);
-  //   })
-  //   .catch(err => {
-  //     next(err);
-  //   });
+  knex('notes')
+    .select('notes.id', 'title', 'content')
+    .modify(queryBuilder => {
+      if (searchTerm) {
+        queryBuilder.where('title', 'like', `%${searchTerm}%`);
+      }
+    })
+    .orderBy('notes.id')
+    .then(results => {
+      res.json(results);
+    })
+    .catch(err => {
+      next(err);
+    });
 });
 
 
@@ -72,11 +58,11 @@ router.put('/:id', (req, res, next) => {
   }
 
   knex('notes')
-  .where({id: `${updateID}`})
-  .update(updateObj)
-  .returning(['title', 'content'])
-  .then(results => res.json(results[0]))
-  .catch(err => new(err));
+    .where({id: `${updateID}`})
+    .update(updateObj)
+    .returning(['title', 'content'])
+    .then(results => res.json(results[0]))
+    .catch(err => new(err));
 });
 
 
@@ -109,13 +95,13 @@ router.delete('/:id', (req, res, next) => {
   const deleteID = req.params.id;
 
   knex('notes')
-  .where({id: `${deleteID}`})
-  .returning('title')
-  .del()
-  .then(results => res.json(results))
-  .catch(err => {
-    next(err);
-  });
+    .where({id: `${deleteID}`})
+    .returning('title')
+    .del()
+    .then(results => res.json(results))
+    .catch(err => {
+      next(err);
+    });
 });
 
 module.exports = router;
