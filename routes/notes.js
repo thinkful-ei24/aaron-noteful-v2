@@ -43,7 +43,6 @@ router.get('/', (req, res, next) => {
 // Get a single item
 router.get('/:id', (req, res, next) => {
   const someID = req.params.id;
-
     
   knex('notes')
     .select()
@@ -68,9 +67,8 @@ router.get('/:id', (req, res, next) => {
 
 // Put update an item
 router.put('/:id', (req, res, next) => {
-  const id = req.params.id;
+  const updateID = req.params.id;
 
-  /***** Never trust users - validate input *****/
   const updateObj = {};
   const updateableFields = ['title', 'content'];
 
@@ -80,24 +78,18 @@ router.put('/:id', (req, res, next) => {
     }
   });
 
-  /***** Never trust users - validate input *****/
   if (!updateObj.title) {
     const err = new Error('Missing `title` in request body');
     err.status = 400;
     return next(err);
   }
 
-  notes.update(id, updateObj)
-    .then(item => {
-      if (item) {
-        res.json(item);
-      } else {
-        next();
-      }
-    })
-    .catch(err => {
-      next(err);
-    });
+  knex('notes')
+  .where({id: `${updateID}`})
+  .update(updateObj)
+  .returning(['title', 'content'])
+  .then(results => res.json(results[0]));
+
 });
 
 // Post (insert) an item
@@ -112,28 +104,50 @@ router.post('/', (req, res, next) => {
     return next(err);
   }
 
-  notes.create(newItem)
-    .then(item => {
-      if (item) {
-        res.location(`http://${req.headers.host}/notes/${item.id}`).status(201).json(item);
+  knex('notes')
+    .insert(newItem)
+    .returning(['title', 'id'])
+    .then(results => {
+      if(results) {
+      res.location(`https://${req.headers.host}/notes/${results.id}`).status(201).json(results);
       }
     })
     .catch(err => {
       next(err);
     });
+
+
+
+  // notes.create(newItem)
+  //   .then(item => {
+  //     if (item) {
+  //       res.location(`http://${req.headers.host}/notes/${item.id}`).status(201).json(item);
+  //     }
+  //   })
+  //   .catch(err => {
+  //     next(err);
+  //   });
 });
 
 // Delete an item
 router.delete('/:id', (req, res, next) => {
-  const id = req.params.id;
+  const deleteID = req.params.id;
 
-  notes.delete(id)
-    .then(() => {
-      res.sendStatus(204);
-    })
-    .catch(err => {
-      next(err);
-    });
+  knex('notes')
+  .where({id: `${deleteID}`})
+  .returning('title')
+  .del()
+  .then(results => res.json(results))
+  .catch(err => {
+    next(err);
+  });
+  // notes.delete(id)
+  //   .then(() => {
+  //     res.sendStatus(204);
+  //   })
+  //   .catch(err => {
+  //     next(err);
+  //   });
 });
 
 module.exports = router;
