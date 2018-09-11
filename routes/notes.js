@@ -2,16 +2,14 @@
 
 const express = require('express');
 
-// Create an router instance (aka "mini-app")
 const router = express.Router();
 
-// TEMP: Simple In-Memory Database
 // const data = require('../db/notes');
 // const simDB = require('../db/simDB');
 // const notes = simDB.initialize(data);
 const knex = require('../knex');
 
-// Get All (and search by query)
+
 router.get('/', (req, res, next) => {
   const searchTerm = req.query.searchTerm;
 
@@ -40,7 +38,7 @@ router.get('/', (req, res, next) => {
   //   });
 });
 
-// Get a single item
+
 router.get('/:id', (req, res, next) => {
   const someID = req.params.id;
     
@@ -52,20 +50,9 @@ router.get('/:id', (req, res, next) => {
       next(err)
     });
 
-  // notes.find(id)
-  //   .then(item => {
-  //     if (item) {
-  //       res.json(item);
-  //     } else {
-  //       next();
-  //     }
-  //   })
-  //   .catch(err => {
-  //     next(err);
-  //   });
 });
 
-// Put update an item
+
 router.put('/:id', (req, res, next) => {
   const updateID = req.params.id;
 
@@ -92,7 +79,7 @@ router.put('/:id', (req, res, next) => {
 
 });
 
-// Post (insert) an item
+
 router.post('/', (req, res, next) => {
   const { title, content } = req.body;
 
@@ -129,7 +116,7 @@ router.post('/', (req, res, next) => {
   //   });
 });
 
-// Delete an item
+
 router.delete('/:id', (req, res, next) => {
   const deleteID = req.params.id;
 
@@ -141,13 +128,6 @@ router.delete('/:id', (req, res, next) => {
   .catch(err => {
     next(err);
   });
-  // notes.delete(id)
-  //   .then(() => {
-  //     res.sendStatus(204);
-  //   })
-  //   .catch(err => {
-  //     next(err);
-  //   });
 });
 
 module.exports = router;
