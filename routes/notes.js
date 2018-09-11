@@ -81,10 +81,10 @@ router.put('/:id', (req, res, next) => {
 
 
 router.post('/', (req, res, next) => {
+  
   const { title, content } = req.body;
-
   const newItem = { title, content };
-  /***** Never trust users - validate input *****/
+
   if (!newItem.title) {
     const err = new Error('Missing `title` in request body');
     err.status = 400;
@@ -95,25 +95,14 @@ router.post('/', (req, res, next) => {
     .insert(newItem)
     .returning(['title', 'id'])
     .then(results => {
+      console.log(results[0]);
       if(results) {
-      res.location(`https://${req.headers.host}/notes/${results.id}`).status(201).json(results);
+      res.location(`https://${req.headers.host}/notes/${results[0].id}`).status(201).json(results[0]);
       }
     })
     .catch(err => {
       next(err);
     });
-
-
-
-  // notes.create(newItem)
-  //   .then(item => {
-  //     if (item) {
-  //       res.location(`http://${req.headers.host}/notes/${item.id}`).status(201).json(item);
-  //     }
-  //   })
-  //   .catch(err => {
-  //     next(err);
-  //   });
 });
 
 
