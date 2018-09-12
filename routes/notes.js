@@ -28,21 +28,21 @@ router.get('/', (req, res, next) => {
 
 router.get('/:id', (req, res, next) => {
   const someID = req.params.id;
-    
+
   knex('notes')
     .select()
-    .where({id: `${someID}`})
+    .where({ id: `${someID}` })
     .returning(['title', 'id'])
     .then(results => {
       if (results.length > 0) {
         res.json(results[0]);
-        }
+      }
       else {
         next();
       }
     })
     .catch(err => {
-      next(err)
+      next(err);
     });
 
 });
@@ -67,14 +67,14 @@ router.put('/:id', (req, res, next) => {
   }
 
   knex('notes')
-    .where({id: `${updateID}`})
+    .where({ id: `${updateID}` })
     .update(updateObj)
     .returning(['title', 'content'])
     .then(results => {
       console.log(results[0]);
       res.json(results[0]);
     })
-    .catch(err => new(err));
+    .catch(err => new (err));
 });
 
 
@@ -93,8 +93,8 @@ router.post('/', (req, res, next) => {
     .returning(['title', 'id'])
     .then(results => {
       console.log(results[0]);
-      if(results) {
-      res.location(`https://${req.headers.host}/notes/${results[0].id}`).status(201).json(results[0]);
+      if (results) {
+        res.location(`https://${req.headers.host}/notes/${results[0].id}`).status(201).json(results[0]);
       }
     })
     .catch(err => {
@@ -107,7 +107,7 @@ router.delete('/:id', (req, res, next) => {
   const deleteID = req.params.id;
 
   knex('notes')
-    .where({id: `${deleteID}`})
+    .where({ id: `${deleteID}` })
     .returning('title')
     .del()
     .then(results => res.json(results))
