@@ -56,27 +56,32 @@ router.get('/:id', (req, res, next) => {
 
 
 router.put('/:id', (req, res, next) => {
+
   const updateID = req.params.id;
+  const { title, content, folderId} = req.body;
 
-  const updateObj = {};
-  const updateableFields = ['title', 'content'];
-
-  updateableFields.forEach(field => {
-    if (field in req.body) {
-      updateObj[field] = req.body[field];
-    }
-  });
-
-  if (!updateObj.title) {
+  if (!title) {
     const err = new Error('Missing `title` in request body');
     err.status = 400;
     return next(err);
   }
 
+  const updateObj = {
+    title,
+    content,
+    folder_id: (folderId) ? folderId : null
+  };
+
   knex('notes')
-    .where({ id: `${updateID}` })
+    .where({ id: updateID })
     .update(updateObj)
-    .returning(['title', 'content'])
+    .returning('id')
+    .then(() => {
+      return knex('notes')
+        .select('notes.id', 'title', 'content', 'folder_id as folderId', 'folders.name as folderName')
+        .leftJoin('folders', 'notes.folder_id', 'folders.id')
+        .where('notes.id', updateID)
+    })
     .then(results => {
       console.log(results[0]);
       res.json(results[0]);
@@ -86,8 +91,13 @@ router.put('/:id', (req, res, next) => {
 
 
 router.post('/', (req, res, next) => {
-  const { title, content } = req.body;
-  const newItem = { title, content };
+  const { title, content, folderId } = req.body;
+  const newItem = { 
+    title, 
+    content,
+    folder_id: (folderId) ? folderId : null
+  };
+  let noteId;
 
   if (!newItem.title) {
     const err = new Error('Missing `title` in request body');
@@ -97,7 +107,14 @@ router.post('/', (req, res, next) => {
 
   knex('notes')
     .insert(newItem)
-    .returning(['title', 'id'])
+    .returning('id')
+    .then(([id]) => {
+      noteId = id;
+      return knex('notes')
+        .select('notes.id', 'title', 'content', 'folder_id as folderId', 'folders.name as folderName')
+        .leftJoin('folders', 'notes.folder_id', 'folders.id')
+        .where('notes.id', noteId);
+      })
     .then(results => {
       console.log(results[0]);
       if (results) {
@@ -117,7 +134,7 @@ router.delete('/:id', (req, res, next) => {
     .where({ id: `${deleteID}` })
     .returning('title')
     .del()
-    .then(results => res.json(results))
+    .then(() => res.status(204).end())
     .catch(err => {
       next(err);
     });
