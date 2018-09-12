@@ -9,7 +9,8 @@ router.get('/', (req, res, next) => {
   const searchTerm = req.query.searchTerm;
 
   knex('notes')
-    .select('id', 'title', 'content')
+    .select('notes.id', 'title', 'content', 'folders.id as folderId', 'folders.name as folderName')
+    .leftJoin('folders', 'notes.folder_id', 'folders.id')
     .modify(results => {
       if (searchTerm) {
         results.where('title', 'like', `%${searchTerm}%`);
