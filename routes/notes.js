@@ -7,6 +7,7 @@ const knex = require('../knex');
 
 router.get('/', (req, res, next) => {
   const searchTerm = req.query.searchTerm;
+  const folderID = req.query.folderId;
 
   knex('notes')
     .select('notes.id', 'title', 'content', 'folders.id as folderId', 'folders.name as folderName')
@@ -16,7 +17,12 @@ router.get('/', (req, res, next) => {
         results.where('title', 'like', `%${searchTerm}%`);
       }
     })
-    .orderBy('id')
+    .modify(results => {
+      if (folderID) {
+        results.where('folder_id', folderID);
+      }
+    })
+    .orderBy('notes.id')
     .then(results => {
       res.json(results);
     })
@@ -30,8 +36,9 @@ router.get('/:id', (req, res, next) => {
   const someID = req.params.id;
 
   knex('notes')
-    .select()
-    .where({ id: `${someID}` })
+    .select('notes.id', 'title', 'content', 'folder_id', 'folders.name as folderName')
+    .leftJoin('folders', 'notes.folder_id', 'folders.id')
+    .where('notes.id', someID)
     .returning(['title', 'id'])
     .then(results => {
       if (results.length > 0) {
