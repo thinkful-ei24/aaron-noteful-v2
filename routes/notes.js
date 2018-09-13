@@ -83,8 +83,7 @@ router.put('/:id', (req, res, next) => {
         .where('notes.id', updateID)
     })
     .then(results => {
-      console.log(results[0]);
-      res.json(results[0]);
+      res.location(`${req.originalUrl}/${results.id}`).status(201).json(results);
     })
     .catch(err => new (err));
 });
