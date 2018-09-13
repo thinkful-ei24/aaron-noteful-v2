@@ -3,8 +3,8 @@ SELECT CURRENT_DATE;
 -- psql -U dev -f ./db/noteful-app.sql -d noteful-app
 
 DROP TABLE IF EXISTS notes_tags;
-DROP TABLE IF EXISTS tags;
 DROP TABLE IF EXISTS notes;
+DROP TABLE IF EXISTS tags;
 DROP TABLE IF EXISTS folders;
 
 
@@ -12,20 +12,42 @@ CREATE TABLE folders (
   id serial PRIMARY KEY,
   name text NOT NULL
 );
+
 ALTER SEQUENCE folders_id_seq RESTART WITH 100;
+
+CREATE TABLE tags(
+    id serial PRIMARY KEY,
+    name text NOT NULL
+);
+
 CREATE TABLE notes(
     id serial PRIMARY KEY,
     title text NOT NULL,
     content text, 
     created timestamp DEFAULT current_timestamp,
-    folder_id int REFERENCES folders(id) ON DELETE SET NULL
+    folder_id int REFERENCES folders(id) ON DELETE SET NULL,
+    tag_id int REFERENCES tags(id) ON DELETE SET NULL
 );
+
+CREATE TABLE notes_tags(
+    note_id INTEGER NOT NULL REFERENCES notes ON DELETE CASCADE,
+    tag_id INTEGER NOT NULL REFERENCES tags ON DELETE CASCADE
+);
+
 
 INSERT INTO folders (name) VALUES
   ('Archive'),
   ('Drafts'),
   ('Personal'),
   ('Work');
+
+
+INSERT INTO tags (name) VALUES
+  ('Hello'),
+  ('Goodbye'),
+  ('Another'),
+  ('Last Tag');
+
 
 
 INSERT INTO notes (title, content, folder_id) VALUES 
@@ -50,22 +72,13 @@ INSERT INTO notes (title, content, folder_id) VALUES
     103
   );
 
-CREATE TABLE tags(
-    id serial PRIMARY KEY,
-    name text NOT NULL
-);
-CREATE TABLE notes_tags(
-    note_id INTEGER NOT NULL REFERENCES notes ON DELETE CASCADE,
-    tag_id INTEGER NOT NULL REFERENCES tags ON DELETE CASCADE
-);
-
-INSERT INTO tags (name) VALUES
-  ('Hello'),
-  ('Goodbye');
 
 INSERT INTO notes_tags (note_id, tag_id) VALUES
   (1, 1),
-  (4, 2);
+  (2, 2),
+  (3, 3),
+  (4, 4);
+
 
 SELECT title, tags.name as tag, folders.name as folderName FROM notes
   LEFT JOIN folders ON notes.folder_id = folders.id

@@ -8,10 +8,14 @@ const knex = require('../knex');
 router.get('/', (req, res, next) => {
   const searchTerm = req.query.searchTerm;
   const folderID = req.query.folderId;
+  const tagID = req.query.tagId;
+
 
   knex('notes')
-    .select('notes.id', 'title', 'content', 'folders.id as folderId', 'folders.name as folderName')
+    .select('notes.id', 'title', 'content', 'folder_id as folderId', 'folders.name as folderName', 'tags.id as tagId', 'tags.name as tagName')
     .leftJoin('folders', 'notes.folder_id', 'folders.id')
+    .leftJoin('notes_tags', 'notes.id', 'notes_tags.note_id')
+    .leftJoin('tags', 'tags.id', 'notes_tags.tag_id')
     .modify(results => {
       if (searchTerm) {
         results.where('title', 'like', `%${searchTerm}%`);
@@ -20,6 +24,11 @@ router.get('/', (req, res, next) => {
     .modify(results => {
       if (folderID) {
         results.where('folder_id', folderID);
+      }
+    })
+    .modify(results => {
+      if (tagID) {
+        results.where('tags.id', tagID);
       }
     })
     .orderBy('notes.id')
@@ -36,9 +45,11 @@ router.get('/:id', (req, res, next) => {
   const someID = req.params.id;
 
   knex('notes')
-    .select('notes.id', 'title', 'content', 'folder_id', 'folders.name as folderName')
-    .leftJoin('folders', 'notes.folder_id', 'folders.id')
+    .select('notes.id', 'title', 'content', 'folder_id as folderId', 'folders.name as folderName', 'tags.id as tagId', 'tags.name as tagName')
     .where('notes.id', someID)
+    .leftJoin('folders', 'notes.folder_id', 'folders.id')
+    .leftJoin('notes_tags', 'notes.id', 'notes_tags.note_id')
+    .leftJoin('tags', 'tags.id', 'notes_tags.tag_id')
     .returning(['title', 'id'])
     .then(results => {
       if (results.length > 0) {
@@ -58,7 +69,8 @@ router.get('/:id', (req, res, next) => {
 router.put('/:id', (req, res, next) => {
 
   const updateID = req.params.id;
-  const { title, content, folderId} = req.body;
+  const { title, content, folder_id, tagId } = req.body;
+  console.log(req.body);
 
   if (!title) {
     const err = new Error('Missing `title` in request body');
@@ -69,7 +81,8 @@ router.put('/:id', (req, res, next) => {
   const updateObj = {
     title,
     content,
-    folder_id: (folderId) ? folderId : null
+    folder_id,
+    tag_id: tagId
   };
 
   knex('notes')
@@ -78,8 +91,10 @@ router.put('/:id', (req, res, next) => {
     .returning('id')
     .then(() => {
       return knex('notes')
-        .select('notes.id', 'title', 'content', 'folder_id as folderId', 'folders.name as folderName')
+        .select('notes.id', 'title', 'content', 'folder_id as folderId', 'folders.name as folderName', 'tags.id as tagId', 'tags.name as tagName')
         .leftJoin('folders', 'notes.folder_id', 'folders.id')
+        .leftJoin('notes_tags', 'notes.id', 'notes_tags.note_id')
+        .leftJoin('tags', 'tags.id', 'notes_tags.tag_id')
         .where('notes.id', updateID)
     })
     .then(results => {
@@ -90,12 +105,15 @@ router.put('/:id', (req, res, next) => {
 
 
 router.post('/', (req, res, next) => {
-  const { title, content, folderId } = req.body;
+  const { title, content, folderId, tags } = req.body;
+  console.log(req.body);
   const newItem = { 
     title, 
     content,
-    folder_id: (folderId) ? folderId : null
+    folder_id: folderId,
+    tag_id: tags[0]
   };
+  console.log(newItem);
   let noteId;
 
   if (!newItem.title) {
@@ -110,8 +128,10 @@ router.post('/', (req, res, next) => {
     .then(([id]) => {
       noteId = id;
       return knex('notes')
-        .select('notes.id', 'title', 'content', 'folder_id as folderId', 'folders.name as folderName')
+        .select('notes.id', 'title', 'content', 'folder_id as folderId', 'folders.name as folderName', 'tags.id as tagId', 'tags.name as tagName')
         .leftJoin('folders', 'notes.folder_id', 'folders.id')
+        .leftJoin('notes_tags', 'notes.id', 'notes_tags.note_id')
+        .leftJoin('tags', 'tags.id', 'notes_tags.tag_id')
         .where('notes.id', noteId);
       })
     .then(results => {
