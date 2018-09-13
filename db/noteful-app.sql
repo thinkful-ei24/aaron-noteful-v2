@@ -1,8 +1,13 @@
 SELECT CURRENT_DATE;
 
 -- psql -U dev -f ./db/noteful-app.sql -d noteful-app
+
+DROP TABLE IF EXISTS notes_tags;
+DROP TABLE IF EXISTS tags;
 DROP TABLE IF EXISTS notes;
 DROP TABLE IF EXISTS folders;
+
+
 CREATE TABLE folders (
   id serial PRIMARY KEY,
   name text NOT NULL
@@ -21,9 +26,6 @@ INSERT INTO folders (name) VALUES
   ('Drafts'),
   ('Personal'),
   ('Work');
-
-
-
 
 
 INSERT INTO notes (title, content, folder_id) VALUES 
@@ -48,8 +50,25 @@ INSERT INTO notes (title, content, folder_id) VALUES
     103
   );
 
+CREATE TABLE tags(
+    id serial PRIMARY KEY,
+    name text NOT NULL
+);
+CREATE TABLE notes_tags(
+    note_id INTEGER NOT NULL REFERENCES notes ON DELETE CASCADE,
+    tag_id INTEGER NOT NULL REFERENCES tags ON DELETE CASCADE
+);
 
+INSERT INTO tags (name) VALUES
+  ('Hello'),
+  ('Goodbye');
 
+INSERT INTO notes_tags (note_id, tag_id) VALUES
+  (1, 1),
+  (4, 2);
 
-
+SELECT title, tags.name as tag, folders.name as folderName FROM notes
+  LEFT JOIN folders ON notes.folder_id = folders.id
+  LEFT JOIN notes_tags ON notes.id = notes_tags.note_id
+  LEFT JOIN tags ON notes_tags.tag_id = tags.id;
 
