@@ -30,7 +30,7 @@ router.get('/', (req, res, next) => {
     })
     .modify(function (queryBuilder) {
       if (tagId) {
-        queryBuilder.where('tag_id', tagId);
+        queryBuilder.where('notes_tags.tag_id', tagId);
       }
     })
     .orderBy('notes.id')
